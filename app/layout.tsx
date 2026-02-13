@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "2026학년도 한들물빛초 6학년 환영합니다",
+  title: "2026학년도 한들물빛초 6학년 팀이 되신 것을 환영합니다",
   description: "공유 장바구니 서비스",
 };
 

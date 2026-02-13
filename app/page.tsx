@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ShoppingCart, Trash2, Plus, Minus, Copy, CheckCircle2, 
-  UtensilsCrossed, X, Image as ImageIcon, ExternalLink, User, Cloud 
+  UtensilsCrossed, X, Image as ImageIcon, ExternalLink, User, Cloud, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { isSupabaseConfigured, supabaseConfigError, supabase, type CartItem } from '../lib/supabase';
 
@@ -74,10 +74,20 @@ export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [supabaseError, setSupabaseError] = useState<string | null>(supabaseConfigError);
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [pendingItem, setPendingItem] = useState<any>(null);
   const [ordererName, setOrdererName] = useState('');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('header_collapsed');
+    if (saved === '1') setIsHeaderCollapsed(true);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('header_collapsed', isHeaderCollapsed ? '1' : '0');
+  }, [isHeaderCollapsed]);
 
   // 1. 초기 데이터 로드 및 실시간 구독
   useEffect(() => {
@@ -306,49 +316,116 @@ export default function Home() {
   return (
     <div className="min-h-screen pb-24">
       <header className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex justify-between w-full md:w-auto items-center">
-            <div>
-              <h1 className="text-xl font-bold text-gray-800 leading-tight">
-                2026학년도 한들물빛초 <br className="sm:hidden" />
-                6학년 환영합니다
-              </h1>
-              <p className="text-sm text-orange-500 font-medium mt-1 flex items-center gap-1">
-                <UtensilsCrossed size={16} /> 실시간 공유 장바구니
-              </p>
+        {isHeaderCollapsed ? (
+          <div className="max-w-4xl mx-auto px-4 py-2 flex justify-between items-center">
+            <button
+              type="button"
+              onClick={() => setIsHeaderCollapsed(false)}
+              className="text-xs bg-gray-100 text-gray-700 px-3 py-2 rounded-full flex items-center gap-1"
+              aria-label="헤더 펼치기"
+            >
+              <ChevronDown size={14} /> 헤더 보기
+            </button>
+
+            <div className="flex items-center gap-2">
+              <a
+                href="https://naver.me/xMjKRA2c"
+                target="_blank"
+                className="text-xs bg-green-500 text-white px-3 py-2 rounded-full flex items-center gap-1"
+              >
+                <ExternalLink size={14} /> 매장 정보
+              </a>
+              <button onClick={() => setIsCartOpen(true)} className="relative p-2 rounded-full hover:bg-gray-100">
+                <ShoppingCart size={22} className="text-gray-700" />
+                {cart.length > 0 && (
+                  <span className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                    {cart.reduce((a, b) => a + b.quantity, 0)}
+                  </span>
+                )}
+              </button>
             </div>
-            <button onClick={() => setIsCartOpen(true)} className="md:hidden relative p-2 rounded-full hover:bg-gray-100">
-              <ShoppingCart size={24} className="text-gray-700" />
-              {cart.length > 0 && (
-                <span className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                  {cart.reduce((a, b) => a + b.quantity, 0)}
-                </span>
-              )}
-            </button>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <a href="https://naver.me/xMjKRA2c" target="_blank" className="text-xs bg-green-500 text-white px-3 py-2 rounded-full flex items-center gap-1">
-              <ExternalLink size={14} /> 매장 정보
-            </a>
-            <button onClick={() => setIsCartOpen(true)} className="hidden md:flex relative p-2 rounded-full hover:bg-gray-100">
-              <ShoppingCart size={24} className="text-gray-700" />
-              {cart.length > 0 && (
-                <span className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                  {cart.reduce((a, b) => a + b.quantity, 0)}
-                </span>
-              )}
-            </button>
+        ) : (
+          <div className="max-w-4xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex justify-between w-full md:w-auto items-center">
+              <div>
+                <h1 className="text-xl font-bold text-gray-800 leading-tight">
+                  2026학년도 한들물빛초 <br className="sm:hidden" />
+                  6학년 팀이 되신 것을 환영합니다
+                </h1>
+                <p className="text-sm text-orange-500 font-medium mt-1 flex items-center gap-1">
+                  <UtensilsCrossed size={16} /> 실시간 공유 장바구니
+                </p>
+              </div>
+              <div className="md:hidden flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setIsHeaderCollapsed(true)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                  aria-label="헤더 숨기기"
+                >
+                  <ChevronUp size={22} className="text-gray-700" />
+                </button>
+                <button onClick={() => setIsCartOpen(true)} className="relative p-2 rounded-full hover:bg-gray-100">
+                  <ShoppingCart size={24} className="text-gray-700" />
+                  {cart.length > 0 && (
+                    <span className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                      {cart.reduce((a, b) => a + b.quantity, 0)}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <a href="https://naver.me/xMjKRA2c" target="_blank" className="text-xs bg-green-500 text-white px-3 py-2 rounded-full flex items-center gap-1">
+                <ExternalLink size={14} /> 매장 정보
+              </a>
+              <button
+                type="button"
+                onClick={() => setIsHeaderCollapsed(true)}
+                className="hidden md:flex p-2 rounded-full hover:bg-gray-100"
+                aria-label="헤더 숨기기"
+              >
+                <ChevronUp size={22} className="text-gray-700" />
+              </button>
+              <button onClick={() => setIsCartOpen(true)} className="hidden md:flex relative p-2 rounded-full hover:bg-gray-100">
+                <ShoppingCart size={24} className="text-gray-700" />
+                {cart.length > 0 && (
+                  <span className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                    {cart.reduce((a, b) => a + b.quantity, 0)}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="border-t overflow-x-auto hide-scrollbar bg-white">
-          <div className="flex justify-center px-4 min-w-full">
-            {CATEGORIES.map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)} className={`py-3 px-4 text-sm font-medium border-b-2 ${activeCategory === cat ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500'}`}>
-                {cat}
-              </button>
-            ))}
+          <div
+            role="tablist"
+            aria-label="카테고리"
+            className="flex items-center gap-2 px-4 py-2 min-w-max md:justify-center md:gap-0 md:py-0 md:min-w-full"
+          >
+            {CATEGORIES.map((cat) => {
+              const active = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium ${
+                    active ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600'
+                  } md:rounded-none md:bg-transparent md:px-4 md:py-3 md:border-b-2 ${
+                    active ? 'md:border-orange-500 md:text-orange-600' : 'md:border-transparent md:text-gray-500'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
           </div>
         </div>
 
