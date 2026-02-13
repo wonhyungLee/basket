@@ -33,6 +33,9 @@ alter publication supabase_realtime add table shared_cart;
 3. `.env.local` 파일을 생성하고 Supabase의 API URL과 Anon Key를 입력합니다:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   # Recommended (new): Publishable key (starts with sb_publishable_)
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+   # Legacy: anon key (JWT). If you set this, you can omit PUBLISHABLE_KEY.
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
@@ -42,6 +45,10 @@ alter publication supabase_realtime add table shared_cart;
 2. [Vercel](https://vercel.com/)에서 새 프로젝트를 만들고 해당 GitHub 리포지토리를 연결합니다.
 3. Vercel 설정의 **Environment Variables** 항목에 위의 두 환경 변수를 등록합니다.
 4. 배포가 완료되면 생성된 URL을 공유하세요!
+
+참고:
+- Next.js 16은 Node.js `>=20.9.0`이 필요합니다. (Vercel Project Settings에서 Node 버전을 20/22로 설정하거나, `package.json`의 `engines`를 따릅니다.)
+- Vercel 환경변수 변경 후에는 재배포가 필요합니다.
 
 ## 로컬 개발 환경 실행
 ```bash
