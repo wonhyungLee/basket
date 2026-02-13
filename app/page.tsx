@@ -348,14 +348,32 @@ export default function Home() {
         ) : (
           <div className="max-w-4xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex justify-between w-full md:w-auto items-center">
-              <div>
-                <h1 className="text-xl font-bold text-gray-800 leading-tight">
-                  2026학년도 한들물빛초 <br className="sm:hidden" />
-                  6학년 팀이 되신 것을 환영합니다
-                </h1>
-                <p className="text-sm text-orange-500 font-medium mt-1 flex items-center gap-1">
-                  <UtensilsCrossed size={16} /> 실시간 공유 장바구니
-                </p>
+              <div className="relative">
+                <div className="welcome-glow absolute -inset-x-8 -inset-y-6 rounded-3xl pointer-events-none" aria-hidden="true" />
+                <div className="relative">
+                  <div className="inline-flex items-center gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold tracking-wide text-white bg-gradient-to-r from-orange-500 to-pink-500 shadow-sm rotate-[-1deg]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/80" aria-hidden="true" />
+                      선생님들, 격하게 환영합니다!
+                    </span>
+                    <span className="hidden sm:inline text-xs text-gray-500">함께해주셔서 감사합니다</span>
+                  </div>
+
+                  <h1 className="mt-2 font-display leading-tight">
+                    <span className="block text-base sm:text-lg text-gray-700">2026학년도 한들물빛초</span>
+                    <span className="block text-2xl sm:text-3xl welcome-gradient-text">
+                      6학년 팀이 되신 것을 환영합니다
+                    </span>
+                  </h1>
+
+                  <div className="pointer-events-none absolute -top-2 -left-2 h-2 w-2 rounded-full bg-orange-400 animate-welcome-float" aria-hidden="true" />
+                  <div className="pointer-events-none absolute top-1 -right-1 h-2 w-2 rotate-12 bg-pink-400 animate-welcome-float-slow" aria-hidden="true" />
+                  <div className="pointer-events-none absolute -bottom-1 left-1/2 h-2 w-2 rotate-45 bg-yellow-400 animate-welcome-float" aria-hidden="true" />
+
+                  <p className="text-sm text-orange-500 font-medium mt-1 flex items-center gap-1">
+                    <UtensilsCrossed size={16} /> 실시간 공유 장바구니
+                  </p>
+                </div>
               </div>
               <div className="md:hidden flex items-center gap-1">
                 <button
