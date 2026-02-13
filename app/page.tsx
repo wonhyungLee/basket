@@ -199,6 +199,7 @@ export default function Home() {
       setSupabaseError(null);
       setToast(`${pendingItem.name} (${name}) 담김`);
       setIsNameModalOpen(false);
+      void fetchCart(); // Realtime이 막혀도 즉시 UI 반영
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setSupabaseError(msg);
@@ -225,6 +226,7 @@ export default function Home() {
       }
 
       setSupabaseError(null);
+      void fetchCart(); // Realtime이 막혀도 즉시 UI 반영
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setSupabaseError(msg);
@@ -250,6 +252,7 @@ export default function Home() {
       }
 
       setSupabaseError(null);
+      void fetchCart(); // Realtime이 막혀도 즉시 UI 반영
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setSupabaseError(msg);
@@ -274,6 +277,7 @@ export default function Home() {
 
       setSupabaseError(null);
       setToast('장바구니가 초기화되었습니다.');
+      void fetchCart(); // Realtime이 막혀도 즉시 UI 반영
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setSupabaseError(msg);
