@@ -5,7 +5,7 @@ import {
   ShoppingCart, Trash2, Plus, Minus, Copy, CheckCircle2, 
   UtensilsCrossed, X, Image as ImageIcon, ExternalLink, User, Cloud 
 } from 'lucide-react';
-import { supabase, type CartItem } from '../lib/supabase';
+import { isSupabaseConfigured, supabaseConfigError, supabase, type CartItem } from '../lib/supabase';
 
 // --- 데이터 구성 ---
 const MENU_DATA = [
@@ -73,6 +73,7 @@ export default function Home() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [supabaseError, setSupabaseError] = useState<string | null>(supabaseConfigError);
   
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [pendingItem, setPendingItem] = useState<any>(null);
@@ -80,6 +81,8 @@ export default function Home() {
 
   // 1. 초기 데이터 로드 및 실시간 구독
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
     fetchCart();
 
     const channel = supabase
@@ -99,13 +102,27 @@ export default function Home() {
   }, []);
 
   const fetchCart = async () => {
-    const { data, error } = await supabase
-      .from('shared_cart')
-      .select('*')
-      .order('created_at', { ascending: true });
-    
-    if (data) setCart(data);
-    if (error) console.error('Fetch error:', error);
+    if (!isSupabaseConfigured) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('shared_cart')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        setSupabaseError(error.message);
+        console.error('Fetch error:', error);
+        return;
+      }
+
+      setSupabaseError(null);
+      if (data) setCart(data);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSupabaseError(msg);
+      console.error('Fetch error:', err);
+    }
   };
 
   useEffect(() => {
@@ -125,6 +142,11 @@ export default function Home() {
   }, [cart]);
 
   const initAddToCart = (item: any) => {
+    if (!isSupabaseConfigured) {
+      setToast(supabaseConfigError || 'Supabase 연결이 설정되지 않았습니다.');
+      return;
+    }
+
     setPendingItem(item);
     if (!ordererName) {
       const storedName = localStorage.getItem('last_order_name');
@@ -137,51 +159,126 @@ export default function Home() {
     e.preventDefault();
     if (!pendingItem) return;
 
+    if (!isSupabaseConfigured) {
+      setToast(supabaseConfigError || 'Supabase 연결이 설정되지 않았습니다.');
+      return;
+    }
+
     const name = ordererName.trim() || '익명';
     localStorage.setItem('last_order_name', name);
 
-    const existingItem = cart.find(i => i.menu_id === pendingItem.id && i.owner === name);
+    try {
+      const existingItem = cart.find(i => i.menu_id === pendingItem.id && i.owner === name);
 
-    if (existingItem) {
-      await supabase
-        .from('shared_cart')
-        .update({ quantity: existingItem.quantity + 1 })
-        .eq('id', existingItem.id);
-    } else {
-      await supabase
-        .from('shared_cart')
-        .insert([{
-          menu_id: pendingItem.id,
-          menu_name: pendingItem.name,
-          price: pendingItem.price,
-          owner: name,
-          quantity: 1
-        }]);
+      let error: { message: string } | null = null;
+      if (existingItem) {
+        const res = await supabase
+          .from('shared_cart')
+          .update({ quantity: existingItem.quantity + 1 })
+          .eq('id', existingItem.id);
+        error = res.error;
+      } else {
+        const res = await supabase
+          .from('shared_cart')
+          .insert([{
+            menu_id: pendingItem.id,
+            menu_name: pendingItem.name,
+            price: pendingItem.price,
+            owner: name,
+            quantity: 1
+          }]);
+        error = res.error;
+      }
+
+      if (error) {
+        setSupabaseError(error.message);
+        setToast(`저장 실패: ${error.message}`);
+        return;
+      }
+
+      setSupabaseError(null);
+      setToast(`${pendingItem.name} (${name}) 담김`);
+      setIsNameModalOpen(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSupabaseError(msg);
+      setToast(`저장 실패: ${msg}`);
     }
-
-    setToast(`${pendingItem.name} (${name}) 담김`);
-    setIsNameModalOpen(false);
   };
 
   const updateQuantity = async (id: string, currentQty: number, delta: number) => {
+    if (!isSupabaseConfigured) {
+      setToast(supabaseConfigError || 'Supabase 연결이 설정되지 않았습니다.');
+      return;
+    }
+
     const newQty = Math.max(1, currentQty + delta);
-    await supabase
-      .from('shared_cart')
-      .update({ quantity: newQty })
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('shared_cart')
+        .update({ quantity: newQty })
+        .eq('id', id);
+      if (error) {
+        setSupabaseError(error.message);
+        setToast(`수정 실패: ${error.message}`);
+        return;
+      }
+
+      setSupabaseError(null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSupabaseError(msg);
+      setToast(`수정 실패: ${msg}`);
+    }
   };
 
   const removeFromCart = async (id: string) => {
-    await supabase
-      .from('shared_cart')
-      .delete()
-      .eq('id', id);
+    if (!isSupabaseConfigured) {
+      setToast(supabaseConfigError || 'Supabase 연결이 설정되지 않았습니다.');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('shared_cart')
+        .delete()
+        .eq('id', id);
+      if (error) {
+        setSupabaseError(error.message);
+        setToast(`삭제 실패: ${error.message}`);
+        return;
+      }
+
+      setSupabaseError(null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSupabaseError(msg);
+      setToast(`삭제 실패: ${msg}`);
+    }
   };
 
   const clearCart = async () => {
     if (!confirm('공유 장바구니의 모든 메뉴가 삭제됩니다. 계속하시겠습니까?')) return;
-    await supabase.from('shared_cart').delete().neq('id', '0');
-    setToast('장바구니가 초기화되었습니다.');
+    if (!isSupabaseConfigured) {
+      setToast(supabaseConfigError || 'Supabase 연결이 설정되지 않았습니다.');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('shared_cart').delete().neq('id', '0');
+      if (error) {
+        setSupabaseError(error.message);
+        setToast(`초기화 실패: ${error.message}`);
+        return;
+      }
+
+      setSupabaseError(null);
+      setToast('장바구니가 초기화되었습니다.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSupabaseError(msg);
+      setToast(`초기화 실패: ${msg}`);
+    }
   };
 
   const copyToClipboard = () => {
@@ -250,6 +347,14 @@ export default function Home() {
             ))}
           </div>
         </div>
+
+        {supabaseError && (
+          <div className="border-t bg-red-50">
+            <div className="max-w-4xl mx-auto px-4 py-2 text-xs text-red-700">
+              {supabaseError}
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
